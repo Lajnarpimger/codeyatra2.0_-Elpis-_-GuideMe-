@@ -14,6 +14,9 @@ import Toast from "../components/UI/Toast";
 import { addUser, logout } from "../store/slices/UserSlices";
 import { useEffect } from "react";
 import TeacherDashboard from "../components/DashBoard/TeacherDashboard";
+import TeacherCreateMcqs from "../components/MCQs/TeacherCreateMcqs";
+import McqTest from "../components/MCQs/McqTest";
+import TeacherViewReports from "../components/DashBoard/TeacherViewReports";
 
 const Allroutes = () => {
   const [users, setUser] = useState(null);
@@ -127,6 +130,7 @@ const Allroutes = () => {
           element={
             <ProtectedRoute requiredRole="teacher">
               <TeacherDashboard />
+              //{" "}
             </ProtectedRoute>
           }
         />
@@ -136,10 +140,14 @@ const Allroutes = () => {
           element={
             <ProtectedRoute requiredRole="student">
               <StudentDashBoard />
+              //{" "}
             </ProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/teacher/create-mcqs" element={<TeacherCreateMcqs />} />
+        <Route path="/mcqs/test/:quizId" element={<McqTest />} />
+        <Route path="/teacher/viewReports" element={<TeacherViewReports />} />
       </Routes>
     </Layout>
   );

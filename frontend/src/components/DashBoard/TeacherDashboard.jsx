@@ -3,6 +3,7 @@ import { summarizeWithGemini } from "../../lib/gemini";
 import { extractPdfText } from "../../lib/extractPdfText";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useNavigate } from "react-router-dom";
 
 const TeacherDashboard = () => {
   const [title, setTitle] = useState("");
@@ -13,6 +14,7 @@ const TeacherDashboard = () => {
   const [Mcqs, setMcqs] = useState([]);
   const [summaryTxt, setSummaryTxt] = useState("");
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
   //   setLoading(true);
@@ -74,7 +76,7 @@ const TeacherDashboard = () => {
         );
 
         pdfText = texts.join("\n");
-        pdfText = pdfText.slice(0, 15000); // cap total
+        pdfText = pdfText.slice(0, 15000);
       }
       setLoading(true);
       const summary = await summarizeWithGemini({ title, notes, pdfText });
@@ -115,6 +117,19 @@ const TeacherDashboard = () => {
         backgroundSize: "56px 56px",
       }}
     >
+      <div className="flex items-center w-screen justify-end my-10">
+        <button
+          type="button"
+          onClick={() => navigate("/teacher/viewReports")}
+          className="w-1/3 mt-4 py-3.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+          style={{
+            background: "linear-gradient(135deg, #a78bfa, #3b82f6)",
+            boxShadow: "0 0 28px rgba(167,139,250,0.25)",
+          }}
+        >
+          View Reports (Performance Tracking)
+        </button>
+      </div>
       <div
         className="max-w-2xl mx-auto rounded-2xl p-8 md:p-10"
         style={{
@@ -328,6 +343,17 @@ const TeacherDashboard = () => {
           </div>
         )}
       </div>
+      <button
+        type="button"
+        onClick={() => navigate("/teacher/create-mcqs")}
+        className="w-full mt-6 py-3.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+        style={{
+          background: "linear-gradient(135deg, #0ea5e9, #22c55e)",
+          boxShadow: "0 0 28px rgba(34,197,94,0.25)",
+        }}
+      >
+        Create MCQs (Questions)
+      </button>
     </div>
   );
 };
