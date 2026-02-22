@@ -7,6 +7,7 @@ import adminRouter from "./routes/admin.route.js";
 import roomRouter from "./routes/room.route.js";
 import cors from "cors";
 import teacherRouter from "./routes/teacher.route.js";
+import studentRoutes from "./routes/student.route.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/room", roomRouter);
 app.use("/api/teacher", teacherRouter);
+app.use("/api/student", studentRoutes);
 
 app.listen(port, async () => {
   console.log(`Server is listening to port ${port}`);
