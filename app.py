@@ -4,8 +4,14 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
 import google.genai as genai
+from dotenv import load_dotenv
+import uvicorn
+
+
+load_dotenv() 
 
 # ---- CONFIG ----
+
 API_KEY = os.getenv("GEMINI_API_KEY")  
 if not API_KEY:
     raise RuntimeError("Missing GEMINI_API_KEY env var")
@@ -72,3 +78,4 @@ async def summarize_pdf(file: UploadFile = File(...)):
                 os.remove(tmp_path)
         except Exception:
             pass
+uvicorn.run("app:app", host="0.0.0.0", port=5001, reload=True)

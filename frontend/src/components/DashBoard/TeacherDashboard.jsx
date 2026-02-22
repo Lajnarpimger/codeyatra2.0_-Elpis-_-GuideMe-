@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { summarizeWithGemini } from "../../lib/gemini";
+import { extractPdfText } from "../../lib/extractPdfText";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const TeacherDashboard = () => {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]); // Array<File>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [Mcqs, setMcqs] = useState([]);
-
+  const [summaryTxt, setSummaryTxt] = useState("");
+  const fileInputRef = useRef(null);
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
   //   setLoading(true);
@@ -39,42 +44,65 @@ const TeacherDashboard = () => {
   //   }
   // };
 
+  const handleRemoveFileAt = (idx) => {
+    setFiles((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      // keep input selectable again (optional)
+      if (next.length === 0 && fileInputRef.current)
+        fileInputRef.current.value = "";
+      return next;
+    });
+  };
+  const handleClearFiles = () => {
+    setFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true);
     setError(null);
-
     try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("notes", notes);
-      if (file) formData.append("file", file);
+      let pdfText = "";
+      if (files.length > 0) {
+        // Extract each PDF text and concatenate
+        const texts = await Promise.all(
+          files.map(async (f) => {
+            const t = await extractPdfText(f);
+            return `\n\n===== PDF: ${f.name} =====\n${t}`;
+          }),
+        );
 
+        pdfText = texts.join("\n");
+        pdfText = pdfText.slice(0, 15000); // cap total
+      }
+      setLoading(true);
+      const summary = await summarizeWithGemini({ title, notes, pdfText });
+      setLoading(false);
+      setSummaryTxt(summary);
+      console.log(summary);
       const res = await fetch(
-        "http://localhost:3000/api/teacher/generate-mcqs",
+        "http://localhost:3000/api/teacher/save-summary",
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: formData, // <- send FormData instead of JSON
+          body: JSON.stringify({ title, notes, summaryTxt: summary }),
         },
       );
-
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Generation failed");
-
-      // display summary immediately
-      alert(data.data.summaryTxt);
-
+      console.log("data of summary", data);
+      if (!res.ok) throw new Error(data.message || "Save failed");
       setTitle("");
       setNotes("");
-      setFile(null);
+      setFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div
       className="min-h-screen p-6 md:p-10"
@@ -182,22 +210,46 @@ const TeacherDashboard = () => {
               }}
             >
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="application/pdf"
-                onChange={(e) => setFile(e.target.files[0])}
+                multiple
+                onChange={(e) => setFiles(Array.from(e.target.files || []))}
                 className="w-full text-sm text-white/40 cursor-pointer
-                  file:mr-3 file:py-1.5 file:px-4
-                  file:rounded-lg file:border
-                  file:text-xs file:font-semibold file:cursor-pointer
-                  file:transition-all file:duration-200"
-                style={{
-                  "--tw-ring-color": "transparent",
-                }}
+    file:mr-3 file:py-1.5 file:px-4
+    file:rounded-lg file:border
+    file:text-xs file:font-semibold file:cursor-pointer
+    file:transition-all file:duration-200"
+                style={{ "--tw-ring-color": "transparent" }}
               />
-              {file && (
-                <p className="mt-2 text-xs text-blue-400 font-medium">
-                  📄 {file.name}
-                </p>
+              {files.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {files.map((f, idx) => (
+                    <div
+                      key={f.name + idx}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <p className="text-xs text-blue-400 font-medium truncate">
+                        📄 {f.name}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFileAt(idx)}
+                        className="text-xs text-red-400 hover:text-red-300 transition"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={handleClearFiles}
+                    className="text-xs text-white/60 hover:text-white transition underline underline-offset-2"
+                  >
+                    Clear all
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -209,7 +261,7 @@ const TeacherDashboard = () => {
           />
 
           {/* Submit */}
-          <button
+          {/* <button
             type="submit"
             className="w-full py-3.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
             style={{
@@ -226,13 +278,55 @@ const TeacherDashboard = () => {
             }}
           >
             Upload Notes
+          </button> */}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3.5 rounded-xl text-white text-sm font-semibold transition-all duration-200
+    ${loading ? "opacity-60 cursor-not-allowed" : "hover:-translate-y-0.5 active:translate-y-0"}
+  `}
+            style={{
+              background: "linear-gradient(135deg, #1d4ed8, #3b82f6)",
+              boxShadow: loading
+                ? "0 0 0 rgba(0,0,0,0)"
+                : "0 0 28px rgba(59,130,246,0.35)",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.boxShadow =
+                  "0 0 44px rgba(59,130,246,0.55)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.boxShadow =
+                  "0 0 28px rgba(59,130,246,0.35)";
+              }
+            }}
+          >
+            {loading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <span className="h-4 w-4 rounded-full border-2 border-white/60 border-t-transparent animate-spin" />
+                Generating...
+              </span>
+            ) : (
+              "Upload Notes"
+            )}
           </button>
         </form>
         {/* show responses  */}
-        <div className="w-20 h-20 rounded-full mt-10">
-          {" "}
-          here i want generated summary immediately
-        </div>
+        {summaryTxt && (
+          <div className="mt-8 p-4 rounded-2xl bg-blue-900/80 border border-blue-400 shadow-lg">
+            <h2 className="text-white text-lg font-semibold mb-2">
+              Generated Summary:
+            </h2>
+            <div className="text-white/90 text-sm leading-relaxed prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {summaryTxt}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

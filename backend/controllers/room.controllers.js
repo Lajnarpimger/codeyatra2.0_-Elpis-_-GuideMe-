@@ -1,6 +1,9 @@
 import Room from "../models/Room.js";
-
 import Teacher from "../models/Teacher.js";
+import { summarizeWithGemini } from "../lib/gemini.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse");
 
 export const roomCreation = async (req, res) => {
   const { roomName, id } = req.body;
@@ -78,28 +81,9 @@ export const roomCreation = async (req, res) => {
 //   }
 // };
 
-export const generateMCQs = async (req, res) => {
+export const saveSummary = async (req, res) => {
   try {
-    const { title, notes } = req.body;
-    const pdfFile = req.file; // the uploaded PDF
-
-    if (!title || !notes) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and notes are required",
-      });
-    }
-
-    console.log("Uploaded PDF:", pdfFile.path); // file path
-
-    // Now you can send `notes` and `pdfFile.path` to your AI model
-    const aiResponse = await axios.post(
-      "http://localhost:5000/generate-summary",
-      { text: notes, filePath: pdfFile?.path }, // send file path if your AI model supports it
-    );
-
-    const summaryTxt = aiResponse.data.summary;
-
+    const { title, notes, summaryTxt } = req.body;
     const teacherContent = await Teacher.create({
       user: req.user._id,
       title,
@@ -107,9 +91,9 @@ export const generateMCQs = async (req, res) => {
       summaryTxt,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "MCQs and summary generated successfully",
+      message: "Summary generated successfully",
       data: {
         contentId: teacherContent._id,
         title: teacherContent.title,
@@ -117,10 +101,10 @@ export const generateMCQs = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("MCQ Generation Error:", error);
-    res.status(500).json({
+    console.error("Generation Error:", error);
+    return res.status(500).json({
       success: false,
-      message: "Server error while generating MCQs",
+      message: "Server error while generating summary",
     });
   }
 };
