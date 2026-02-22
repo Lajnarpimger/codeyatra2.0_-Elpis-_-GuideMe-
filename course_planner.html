@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎓 AI Course Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0b0a1a;
+      --surface:     rgba(255,255,255,0.04);
+      --border:      rgba(255,255,255,0.09);
+      --text:        #e2e8f0;
+      --muted:       #64748b;
+      --violet:      #7c3aed;
+      --violet-lite: rgba(124,58,237,0.18);
+      --blue:        #3b82f6;
+      --orange:      #f97316;
+      --red:         #ef4444;
+      --green:       #22c55e;
+      --yt:          #ff4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated mesh background ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(59,130,246,0.14) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(34,197,94,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 6rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    header { text-align: center; margin-bottom: 3rem; }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      background: var(--violet-lite);
+      border: 1px solid rgba(124,58,237,.35);
+      border-radius: 50px;
+      padding: .35rem 1rem .35rem .6rem;
+      font-size: .8rem;
+      font-weight: 600;
+      color: #a78bfa;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+    }
+    .logo span { font-size: 1.1rem; }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #c4b5fd 0%, #818cf8 40%, #38bdf8 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: .6rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Input card ───────────────────────────────────────────── */
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      margin-bottom: 2rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+      background: rgba(0,0,0,.25);
+      border-radius: 12px;
+      padding: .3rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: .55rem 1rem;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .tab-btn.active {
+      background: var(--violet-lite);
+      color: #c4b5fd;
+      border: 1px solid rgba(124,58,237,.4);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Textarea */
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      background: rgba(0,0,0,.3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: .92rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+      line-height: 1.6;
+    }
+    textarea:focus { border-color: rgba(124,58,237,.6); }
+    textarea::placeholder { color: var(--muted); }
+
+    /* File drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragging {
+      border-color: rgba(124,58,237,.6);
+      background: rgba(124,58,237,.06);
+    }
+    .drop-zone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .drop-icon { font-size: 2.4rem; margin-bottom: .6rem; }
+    .drop-text { color: var(--muted); font-size: .92rem; }
+    .drop-text strong { color: #a78bfa; }
+
+    #preview-img {
+      max-height: 220px;
+      border-radius: 10px;
+      margin-top: 1rem;
+      display: none;
+      max-width: 100%;
+    }
+
+    /* Row below textarea */
+    .input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .level-select {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .level-select label { font-size: .85rem; color: var(--muted); font-weight: 500; }
+    select {
+      background: rgba(0,0,0,.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .4rem .8rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: .88rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Generate button */
+    .btn-generate {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      border-radius: 12px;
+      padding: .7rem 1.8rem;
+      color: #fff;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(124,58,237,.35);
+    }
+    .btn-generate:hover { opacity: .9; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,.45); }
+    .btn-generate:active { transform: translateY(0); }
+    .btn-generate:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .btn-generate .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    .btn-generate.loading .spinner { display: block; }
+    .btn-generate.loading .btn-label { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Ollama URL input */
+    .ollama-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 1.2rem;
+    }
+    .ollama-row label { font-size: .82rem; color: var(--muted); white-space: nowrap; }
+    .ollama-row input[type=text] {
+      flex: 1;
+      background: rgba(0,0,0,.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .38rem .8rem;
+      color: var(--text);
+      font-family: 'Inter', monospace;
+      font-size: .82rem;
+      outline: none;
+    }
+
+    /* ── Status / error ───────────────────────────────────────── */
+    #status-bar {
+      display: none;
+      align-items: center;
+      gap: .8rem;
+      padding: .9rem 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      font-size: .9rem;
+      font-weight: 500;
+    }
+    #status-bar.info  { background: rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25); color:#93c5fd; }
+    #status-bar.error { background: rgba(239,68,68,.12);  border:1px solid rgba(239,68,68,.25);  color:#fca5a5; }
+    #status-bar.success { background: rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#86efac; }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse-dot 1.2s ease-in-out infinite;
+    }
+    #status-bar.info .status-dot    { background: #60a5fa; }
+    #status-bar.error .status-dot   { background: #f87171; animation: none; }
+    #status-bar.success .status-dot { background: #4ade80; animation: none; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    /* ── Results ──────────────────────────────────────────────── */
+    #results { display: none; }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+    .course-title { font-size: 1.7rem; font-weight: 700; color: var(--text); }
+    .course-title span { color: #a78bfa; }
+
+    /* Stat pills */
+    .stats-row {
+      display: flex;
+      gap: .7rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .stat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: .42rem 1rem;
+      font-size: .84rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+    }
+    .stat-pill .val { font-weight: 700; color: #a78bfa; }
+
+    /* Section heading */
+    .section-heading {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Topic card */
+    .topic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 1rem;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      cursor: default;
+    }
+    .topic-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(124,58,237,.15);
+      border-color: rgba(124,58,237,.3);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-bottom: .8rem;
+    }
+    .card-index {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--violet-lite);
+      border: 1px solid rgba(124,58,237,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; font-weight: 700; color: #a78bfa;
+      flex-shrink: 0;
+    }
+    .card-topic { font-size: 1.1rem; font-weight: 700; color: var(--text); flex: 1; }
+
+    .depth-badge {
+      padding: .22rem .7rem;
+      border-radius: 50px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .depth-foundational { background: rgba(59,130,246,.15); color: #93c5fd; border: 1px solid rgba(59,130,246,.25); }
+    .depth-intermediate  { background: rgba(249,115,22,.15); color: #fdba74; border: 1px solid rgba(249,115,22,.25); }
+    .depth-advanced      { background: rgba(239,68,68,.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,.25); }
+
+    .hours-pill {
+      background: rgba(167,139,250,.12);
+      border: 1px solid rgba(167,139,250,.25);
+      color: #a78bfa;
+      padding: .22rem .7rem;
+      border-radius: 50px;
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .rationale {
+      color: var(--muted);
+      font-size: .87rem;
+      font-style: italic;
+      margin-bottom: .9rem;
+      line-height: 1.5;
+    }
+
+    /* Subtopics */
+    .sub-label {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .45rem;
+    }
+    .sub-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-bottom: 1rem;
+    }
+    .sub-tag {
+      background: rgba(96,165,250,.1);
+      border: 1px solid rgba(96,165,250,.18);
+      color: #93c5fd;
+      padding: .2rem .65rem;
+      border-radius: 6px;
+      font-size: .8rem;
+    }
+
+    /* YouTube links */
+    .yt-label {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .5rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .yt-link {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      text-decoration: none;
+      color: #fca5a5;
+      font-size: .86rem;
+      padding: .35rem 0;
+      transition: color .15s;
+      line-height: 1.4;
+    }
+    .yt-link svg { flex-shrink: 0; }
+    .yt-link:hover { color: #fecaca; }
+
+    /* ── Download bar ─────────────────────────────────────────── */
+    .dl-bar {
+      display: flex;
+      gap: .8rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .btn-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .65rem 1.4rem;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .2s, border-color .2s, transform .15s;
+    }
+    .btn-dl:hover {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.2);
+      transform: translateY(-1px);
+    }
+
+    /* ── Progress bar inside card ─────────────────────────────── */
+    .hours-bar-wrap { margin-top: .5rem; }
+    .hours-bar-bg {
+      height: 4px;
+      border-radius: 4px;
+      background: rgba(255,255,255,.07);
+      overflow: hidden;
+    }
+    .hours-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #7c3aed, #60a5fa);
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+    .hours-bar-label {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: .3rem;
+    }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+
+    /* ── Fade-in animation ────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp .5s ease forwards;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header>
+    <div class="logo"><span>🎓</span> AI Course Planner</div>
+    <h1>Turn Any Syllabus Into<br>a Teaching Roadmap</h1>
+    <p class="subtitle">Paste your course outline and get a structured plan with topic depth, teaching hours, and YouTube references — powered by local AI.</p>
+  </header>
+
+  <!-- ── Input Card ───────────────────────────────────────────── -->
+  <div class="input-card">
+    <!-- Ollama endpoint -->
+    <div class="ollama-row">
+      <label>Ollama URL</label>
+      <input type="text" id="ollamaUrl" value="http://localhost:11434" />
+      <label style="margin-left:.6rem;">Model</label>
+      <input type="text" id="modelName" value="llama3.2" style="max-width:130px;" />
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('text',this)">📝 Paste Text</button>
+      <button class="tab-btn" onclick="switchTab('image',this)">📷 Upload Image</button>
+    </div>
+
+    <!-- Text panel -->
+    <div class="tab-panel active" id="panel-text">
+      <textarea id="syllabusText" placeholder="Paste your course syllabus here…
+
+Example:
+Unit 1: Python Basics – variables, data types, loops, functions
+Unit 2: Object-Oriented Programming – classes, objects, inheritance
+Unit 3: File Handling – reading/writing files, CSV, JSON
+Unit 4: Web Scraping – requests, BeautifulSoup
+Unit 5: Mini Project – build a personal web scraper"></textarea>
+    </div>
+
+    <!-- Image panel -->
+    <div class="tab-panel" id="panel-image">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="imgInput" accept="image/*" onchange="handleImage(event)" />
+        <div class="drop-icon">🖼️</div>
+        <div class="drop-text">
+          <strong>Click to upload</strong> or drag &amp; drop<br>
+          <span style="font-size:.8rem;">JPG, PNG, WEBP — photo of your printed/handwritten syllabus</span>
+        </div>
+        <img id="preview-img" alt="Preview" />
+      </div>
+      <p style="color:var(--muted);font-size:.82rem;margin-top:.7rem;">
+        ⚠️ Image-to-text needs a vision model. Set the model to <code style="color:#a78bfa">llava</code> above, then click Generate.
+      </p>
+    </div>
+
+    <!-- Footer row -->
+    <div class="input-footer">
+      <div class="level-select">
+        <label>Audience Level</label>
+        <select id="levelSelect">
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate" selected>Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+      </div>
+      <button class="btn-generate" id="generateBtn" onclick="generatePlan()">
+        <div class="spinner"></div>
+        <span class="btn-label">✨ Generate Plan</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Status bar ───────────────────────────────────────────── -->
+  <div id="status-bar">
+    <div class="status-dot"></div>
+    <span id="status-msg"></span>
+  </div>
+
+  <!-- ── Results ──────────────────────────────────────────────── -->
+  <div id="results">
+    <div class="result-header">
+      <div>
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.3rem;">Generated Course Plan</div>
+        <div class="course-title" id="courseTitle"></div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="section-heading">📚 Topics &amp; Teaching Plan</div>
+    <div id="topicCards"></div>
+
+    <div class="dl-bar">
+      <button class="btn-dl" onclick="downloadJSON()">⬇️ Download JSON</button>
+      <button class="btn-dl" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ───────────────────────────────────────────────────────────────
+     State
+  ─────────────────────────────────────────────────────────────── */
+  let currentPlan = null;
+  let activeTab   = 'text';
+  let imageBase64 = null;
+
+  /* ───────────────────────────────────────────────────────────────
+     Tabs
+  ─────────────────────────────────────────────────────────────── */
+  function switchTab(tab, btn) {
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Image handling
+  ─────────────────────────────────────────────────────────────── */
+  function handleImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      imageBase64 = ev.target.result.split(',')[1]; // strip data:...;base64,
+      const img = document.getElementById('preview-img');
+      img.src = ev.target.result;
+      img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // drag & drop styling
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragging'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragging'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dragging');
+    const f = e.dataTransfer.files[0];
+    if (f) { document.getElementById('imgInput').files = e.dataTransfer.files; handleImage({target:{files:e.dataTransfer.files}}); }
+  });
+
+  /* ───────────────────────────────────────────────────────────────
+     Status bar helpers
+  ─────────────────────────────────────────────────────────────── */
+  function showStatus(msg, type = 'info') {
+    const bar = document.getElementById('status-bar');
+    const msgEl = document.getElementById('status-msg');
+    bar.className  = type;
+    bar.style.display = 'flex';
+    msgEl.textContent = msg;
+  }
+  function hideStatus() {
+    document.getElementById('status-bar').style.display = 'none';
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Ollama API call
+  ─────────────────────────────────────────────────────────────── */
+  async function callOllama(prompt, imageB64 = null) {
+    const url   = document.getElementById('ollamaUrl').value.trimEnd('/');
+    const model = document.getElementById('modelName').value.trim();
+
+    const body = {
+      model,
+      prompt,
+      stream: false,
+      options: { temperature: 0.25 }
+    };
+    if (imageB64) body.images = [imageB64];
+
+    const res = await fetch(`${url}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error(`Ollama returned ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.response;
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Prompts
+  ─────────────────────────────────────────────────────────────── */
+  const EXTRACT_PROMPT = `You are reading an image of a course syllabus or curriculum.
+List every topic, unit, chapter, or subject you can see in the image as a plain bullet list.
+Do NOT add any explanation. Just list the items.`;
+
+  function buildPlanPrompt(syllabus, level) {
+    return `You are an expert curriculum designer. Analyse the following course syllabus and return a structured JSON teaching plan.
+
+Syllabus:
+"""
+${syllabus}
+"""
+
+Audience Level: ${level}
+
+Return ONLY valid JSON — no markdown, no explanation, no code fences. Use this exact structure:
+{
+  "course_title": "inferred title",
+  "total_hours": <sum of teaching_hours>,
+  "topics": [
+    {
+      "topic": "topic name",
+      "subtopics": ["subtopic 1", "subtopic 2", "subtopic 3"],
+      "depth": "Foundational" or "Intermediate" or "Advanced",
+      "teaching_hours": <number 1-20>,
+      "rationale": "one sentence on why this topic matters"
+    }
+  ]
+}
+
+Rules:
+- Depth relative to the audience level provided.
+- teaching_hours = realistic lecture + practice time.
+- Every topic must have 2-5 subtopics.
+- Output ONLY the JSON object.`;
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Parse JSON robustly
+  ─────────────────────────────────────────────────────────────── */
+  function parseJSON(raw) {
+    // strip markdown code fences if present
+    let clean = raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+    // find first { ... last }
+    const start = clean.indexOf('{');
+    const end   = clean.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('No JSON object found in model response.');
+    return JSON.parse(clean.slice(start, end + 1));
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     YouTube search link builder (uses YouTube Search URL — no API key)
+  ─────────────────────────────────────────────────────────────── */
+  function ytSearchLink(topic, level) {
+    const q = encodeURIComponent(`${topic} tutorial ${level}`);
+    return `https://www.youtube.com/results?search_query=${q}`;
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Main: Generate plan
+  ─────────────────────────────────────────────────────────────── */
+  async function generatePlan() {
+    const btn   = document.getElementById('generateBtn');
+    const level = document.getElementById('levelSelect').value;
+    let syllabus = '';
+
+    // Validate inputs
+    if (activeTab === 'text') {
+      syllabus = document.getElementById('syllabusText').value.trim();
+      if (!syllabus) { showStatus('Please paste your syllabus text first.', 'error'); return; }
+    } else {
+      if (!imageBase64) { showStatus('Please upload a syllabus image first.', 'error'); return; }
+    }
+
+    // UI: loading state
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('results').style.display = 'none';
+    hideStatus();
+
+    try {
+      // Step 1 — image mode: extract text from image
+      if (activeTab === 'image') {
+        showStatus('Reading image with LLaVA… (this may take a moment)', 'info');
+        syllabus = await callOllama(EXTRACT_PROMPT, imageBase64);
+      }
+
+      // Step 2 — generate structured plan
+      showStatus('Generating structured course plan…', 'info');
+      const raw  = await callOllama(buildPlanPrompt(syllabus, level));
+      const plan = parseJSON(raw);
+
+      currentPlan = plan;
+      renderResults(plan, level);
+      showStatus('Plan generated successfully!', 'success');
+      setTimeout(hideStatus, 3500);
+    } catch (err) {
+      showStatus(`Error: ${err.message}`, 'error');
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Render results
+  ─────────────────────────────────────────────────────────────── */
+  function depthClass(d) {
+    const map = { 'Foundational':'foundational', 'Intermediate':'intermediate', 'Advanced':'advanced' };
+    return map[d] || 'foundational';
+  }
+
+  function renderResults(plan, level) {
+    const topics = plan.topics || [];
+    const total  = plan.total_hours || topics.reduce((s, t) => s + (t.teaching_hours || 0), 0);
+    const maxH   = Math.max(...topics.map(t => t.teaching_hours || 1));
+
+    // depth counts
+    const dCounts = {};
+    topics.forEach(t => { dCounts[t.depth] = (dCounts[t.depth] || 0) + 1; });
+
+    // Title
+    document.getElementById('courseTitle').innerHTML =
+      `<span>📚</span> ${escH(plan.course_title || 'Course Plan')}`;
+
+    // Stats
+    const statsHtml = [
+      `<div class="stat-pill">📋 <span class="val">${topics.length}</span> Topics</div>`,
+      `<div class="stat-pill">🕐 <span class="val">${total}</span> Total Hours</div>`,
+      ...Object.entries(dCounts).map(([d, n]) =>
+        `<div class="stat-pill">${depthIcon(d)} <span class="val">${n}</span> ${escH(d)}</div>`)
+    ].join('');
+    document.getElementById('statsRow').innerHTML = statsHtml;
+
+    // Cards
+    const cardsHtml = topics.map((t, i) => {
+      const sub = (t.subtopics || []).map(s => `<span class="sub-tag">${escH(s)}</span>`).join('');
+      const pct = Math.round(((t.teaching_hours || 1) / maxH) * 100);
+      const ytUrl = ytSearchLink(t.topic, level);
+
+      return `<div class="topic-card fade-up" style="animation-delay:${i * 0.07}s">
+        <div class="card-top">
+          <div class="card-index">${i + 1}</div>
+          <div class="card-topic">${escH(t.topic)}</div>
+          <span class="depth-badge depth-${depthClass(t.depth)}">${escH(t.depth)}</span>
+          <span class="hours-pill">🕐 ${t.teaching_hours || 0} hrs</span>
+        </div>
+        ${t.rationale ? `<div class="rationale">💡 ${escH(t.rationale)}</div>` : ''}
+        ${sub ? `<div class="sub-label">Subtopics</div><div class="sub-tags">${sub}</div>` : ''}
+        <div class="hours-bar-wrap">
+          <div class="sub-label">Teaching Hours</div>
+          <div class="hours-bar-bg">
+            <div class="hours-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="hours-bar-label">${t.teaching_hours || 0} hrs — ${pct}% of the longest topic</div>
+        </div>
+        <hr class="divider" style="margin:1rem 0 .8rem" />
+        <div class="yt-label">
+          ${ytIcon()} YouTube References
+        </div>
+        <a class="yt-link" href="${ytUrl}" target="_blank" rel="noreferrer">
+          ${ytIcon()} Search "${escH(t.topic)} tutorial ${level}" on YouTube
+        </a>
+      </div>`;
+    }).join('');
+
+    document.getElementById('topicCards').innerHTML = cardsHtml;
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Helpers
+  ─────────────────────────────────────────────────────────────── */
+  function escH(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function depthIcon(d) {
+    return { Foundational:'🔵', Intermediate:'🟠', Advanced:'🔴' }[d] || '⚪';
+  }
+  function ytIcon() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="#ff4444">
+      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+    </svg>`;
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Download JSON
+  ─────────────────────────────────────────────────────────────── */
+  function downloadJSON() {
+    if (!currentPlan) return;
+    const blob = new Blob([JSON.stringify(currentPlan, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (currentPlan.course_title || 'course_plan').replace(/\s+/g, '_').toLowerCase() + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /* Allow Enter in the Ollama URL/model fields to trigger generation */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generatePlan();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+pypdf
+python-pptx
+python-docx
+nltk
+beautifulsoup4
+requests
+google-genai
+python-dotenv
+streamlit
+ollama
+pillow
+fpdf2
+httpx<0.28
+pypdf
+python-docx
+mediapipe==0.10.21
