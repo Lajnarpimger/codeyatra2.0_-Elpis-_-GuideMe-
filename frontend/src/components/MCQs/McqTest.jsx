@@ -42,7 +42,6 @@ const McqTest = () => {
     })();
   }, [quizId]);
 
-  // start webcam (preview only)
   useEffect(() => {
     const startCam = async () => {
       try {

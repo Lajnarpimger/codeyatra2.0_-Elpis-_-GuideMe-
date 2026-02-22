@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 // ... your existing imports
 
-const StudentDashBoard = ({ user }) => {
+const StudentDashBoard = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
   const [quizError, setQuizError] = useState(null);

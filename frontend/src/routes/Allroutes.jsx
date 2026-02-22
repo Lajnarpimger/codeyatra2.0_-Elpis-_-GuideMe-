@@ -121,7 +121,7 @@ const Allroutes = () => {
           path="/admin"
           element={
             <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
+              <AdminDashboard onLogout={handleLogout} />
             </ProtectedRoute>
           }
         />
@@ -139,7 +139,7 @@ const Allroutes = () => {
           path="/dashboard"
           element={
             <ProtectedRoute requiredRole="student">
-              <StudentDashBoard />
+              <StudentDashBoard onLogout={handleLogout} />
               //{" "}
             </ProtectedRoute>
           }
