@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Questions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1e40af;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-light: #64748b;
+            --accent: #10b981;
+        }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);
+                line-height:1.6; margin:0; padding:40px 20px; }
+        .container { max-width:800px; margin:0 auto; }
+        header { text-align:center; margin-bottom:50px; }
+        h1 { color:var(--primary-dark); font-weight:700; margin-bottom:10px; }
+        .meta { color:var(--text-light); font-size:.9rem; }
+        .mcq-card { background:var(--card-bg); padding:30px; border-radius:16px;
+                     box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px;
+                     transition:transform .2s; }
+        .mcq-card:hover { transform:translateY(-2px); }
+        .question { font-size:1.1rem; font-weight:600; margin-bottom:20px; color:var(--primary-dark); }
+        .options-list { list-style:none; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .option { background:#f1f5f9; padding:12px 20px; border-radius:10px; font-size:.95rem;
+                   cursor:pointer; transition:all .2s; border:2px solid transparent; }
+        .option:hover { background:#e2e8f0; border-color:var(--primary); }
+        .answer-reveal { margin-top:20px; font-weight:600; color:var(--accent); display:none;
+                          background:#ecfdf5; padding:10px; border-radius:8px; text-align:center; }
+        .show-answer-btn { margin-top:15px; background:none; border:1px solid var(--primary);
+                            color:var(--primary); padding:8px 16px; border-radius:8px; cursor:pointer;
+                            font-size:.85rem; font-weight:600; transition:all .2s; }
+        .show-answer-btn:hover { background:var(--primary); color:white; }
+        @media (max-width:640px) { .options-list { grid-template-columns:1fr; } }
+        .actions { display:flex; justify-content:center; gap:20px; margin-top:50px; }
+        .btn-print { background:var(--primary); color:white; border:none; padding:12px 24px;
+                      border-radius:12px; font-weight:600; cursor:pointer;
+                      box-shadow:0 10px 15px -3px rgba(37,99,235,.3); }
+        .btn-print:hover { background:var(--primary-dark); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>MCQ Questions</h1>
+        <p class="meta">10 Questions Generated</p>
+    </header>
+    <div id="questions">
+
+        <div class="mcq-card">
+            <div class="question">Q1: The organ structurally divided into four distinct chambers, comprising two superior atria and two inferior ventricles, is the:?</div>
+            <ul class="options-list"><li class="option">heart</li><li class="option">Cava</li><li class="option">Oxygenation</li><li class="option">Delivers</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: heart</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q2: The human heart, an organ situated slightly to the left of the chest and between the lungs, is typically estimated to be the approximate size of a clenched ________?</div>
+            <ul class="options-list"><li class="option">Left</li><li class="option">Right</li><li class="option">fist</li><li class="option">Hooks</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: fist</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q3: Which anatomical structure is primarily responsible for regulating the unidirectional flow of blood and preventing backflow between cardiac chambers?</div>
+            <ul class="options-list"><li class="option">Skeletal structure</li><li class="option">Filament</li><li class="option">valve</li><li class="option">Infundibulum</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: valve</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q4: Which of the following biological tissues is primarily responsible for generating mechanical force and movement through contraction?</div>
+            <ul class="options-list"><li class="option">Lungs</li><li class="option">muscle</li><li class="option">Nutrients</li><li class="option">Atrium</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: muscle</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q5: Cardiac components responsible for directing blood flow and preventing backflow are the _______ ensure blood flows in one direction?</div>
+            <ul class="options-list"><li class="option">valves—that</li><li class="option">Side</li><li class="option">Size</li><li class="option">Waste</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: valves—that</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q6: Which of the following refers to 'blood'?</div>
+            <ul class="options-list"><li class="option">Yellow bile</li><li class="option">blood</li><li class="option">Chyle</li><li class="option">Aqueous humor</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: blood</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q7: Which of the following refers to 'lungs'?</div>
+            <ul class="options-list"><li class="option">lungs</li><li class="option">Lung</li><li class="option">Gill</li><li class="option">Book lung</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: lungs</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q8: What is the collective term for the four main compartments of the human heart responsible for receiving and pumping blood?</div>
+            <ul class="options-list"><li class="option">chambers</li><li class="option">Minute</li><li class="option">Ventricles</li><li class="option">Parts</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: chambers</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q9: Which of the following refers to 'Heart'?</div>
+            <ul class="options-list"><li class="option">Tricuspid</li><li class="option">Heart</li><li class="option">Atrium</li><li class="option">Backflow</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: Heart</div>
+        </div>
+
+        <div class="mcq-card">
+            <div class="question">Q10: Which of the following refers to 'myocardium'?</div>
+            <ul class="options-list"><li class="option">myocardium</li><li class="option">Purkinje network</li><li class="option">Atrioventricular node</li><li class="option">Purkinje fiber</li></ul>
+            <button class="show-answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+            <div class="answer-reveal">Correct Answer: myocardium</div>
+        </div>
+
+    </div>
+    <div class="actions">
+        <button class="btn-print" onclick="window.print()">Print Question Paper</button>
+    </div>
+</div>
+<script>
+function toggleAnswer(btn) {
+    const reveal = btn.nextElementSibling;
+    reveal.style.display = reveal.style.display === 'block' ? 'none' : 'block';
+    btn.textContent = reveal.style.display === 'block' ? 'Hide Answer' : 'Show Answer';
+}
+</script>
+</body>
+</html>

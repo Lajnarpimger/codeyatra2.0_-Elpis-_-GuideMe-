@@ -1,0 +1,6 @@
+codeyatra/
+models/
+output/
+*.docx
+*.txt
+.env
